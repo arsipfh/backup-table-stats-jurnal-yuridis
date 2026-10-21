@@ -1,0 +1,220 @@
+<!-- BOOTSTRAP -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+#sjv-mini {
+  border-radius: 14px;
+  overflow: hidden;
+  font-size: 15px;
+  transition: all .25s ease;
+}
+#sjv-mini:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+/* HEADER (GA STYLE) */
+.ga-header {
+  padding: 10px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+/* GA ICON */
+.ga-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  background: linear-gradient(180deg,#fbbc04,#ea4335);
+  border-radius: 4px;
+  position: relative;
+}
+.ga-icon::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 4px;
+  width: 6px;
+  height: 10px;
+  background: #fff;
+  border-radius: 2px;
+}
+
+/* REALTIME HIGHLIGHT */
+.rt-box {
+  text-align: center;
+  padding: 12px 10px;
+  border-bottom: 1px solid #eee;
+}
+.rt-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: #9b0000;
+}
+.rt-label {
+  font-size: 13px;
+  color: #6c757d;
+}
+
+/* pulse */
+.live-dot {
+  width: 7px;
+  height: 7px;
+  background: #22c55e;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34,197,94,.5); }
+  70% { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+  100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
+
+/* TABLE STYLE (GA LOOK) */
+#sjv-mini table {
+  margin-bottom: 0;
+}
+#sjv-mini table tr {
+  transition: .2s;
+}
+#sjv-mini table tr:hover {
+  background: #f8fafc;
+}
+#sjv-mini td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f1f1;
+  font-size: 15px;
+}
+#sjv-mini tr:last-child td {
+  border-bottom: none;
+}
+#sjv-mini td:first-child {
+  color: #6c757d;
+}
+.stat-number {
+  font-weight: 700;
+  color: #9b0000;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+}
+
+/* FOOTER */
+#sjv-mini .card-footer {
+  font-size: 13px;
+  background: #fff;
+}
+</style>
+
+<div id="sjv-mini" class="card shadow-sm border-0">
+
+  <!-- HEADER ICON ONLY -->
+  <div class="ga-header d-flex align-items-center gap-2">
+    <span class="ga-icon"></span>
+    <span class="small text-muted" style="font-size:14px;">Data By <b>Google Analytics</b></span>
+  </div>
+
+  <!-- REALTIME -->
+  <div class="rt-box">
+    <div>
+      <span class="live-dot me-1"></span>
+      <span id="sjv-mini-rt" class="rt-number">–</span>
+    </div>
+    <div class="rt-label">Active Users</div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card-body p-0">
+    <table class="table table-sm">
+      <tr>
+        <td>Hari Ini</td>
+        <td class="stat-number" id="sjv-m1">–</td>
+      </tr>
+      <tr>
+        <td>7 Hari</td>
+        <td class="stat-number" id="sjv-m7">–</td>
+      </tr>
+      <tr>
+        <td>1 Bulan</td>
+        <td class="stat-number" id="sjv-m30">–</td>
+      </tr>
+      <tr>
+        <td>2 Bulan</td>
+        <td class="stat-number" id="sjv-m60">–</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="card-footer d-flex justify-content-between align-items-center">
+    <span id="sjv-mini-updated">Updated: –</span>
+    <a href="https://hukum.upnvj.ac.id/stats-jurnal-yuridis/" 
+       class="fw-semibold text-danger text-decoration-none"
+       target="_blank">
+      <b>Detail Selengkapnya</b> →
+    </a>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var GAS = 'https://script.google.com/macros/s/AKfycby5nuVUis43M4Pn1wJD3B00s0UvyEwv0z2iXnLEzQTU3ayH_t0qP42Qv-lZR2WMYl65SA/exec';
+
+  function animateValue(el, start, end, duration) {
+    let startTime = null;
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      let progress = Math.min((timestamp - startTime) / duration, 1);
+      let value = Math.floor(progress * (end - start) + start);
+      el.textContent = value.toLocaleString('id-ID');
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function updateCell(id, newValue) {
+    let el = document.getElementById(id);
+    if (!el) return;
+    let current = parseInt(el.textContent.replace(/\D/g,'')) || 0;
+    el.style.opacity = 0.3;
+    setTimeout(() => {
+      animateValue(el, current, newValue, 500);
+      el.style.opacity = 1;
+    }, 120);
+  }
+
+  function updateTimestamp() {
+    let now = new Date();
+    document.getElementById('sjv-mini-updated').textContent =
+      'Updated: ' + now.toLocaleTimeString('id-ID');
+  }
+
+  function loadMini() {
+    Promise.all([
+      fetch(GAS+'?type=summary&days=1').then(r=>r.json()),
+      fetch(GAS+'?type=summary&days=7').then(r=>r.json()),
+      fetch(GAS+'?type=summary&days=30').then(r=>r.json()),
+      fetch(GAS+'?type=summary&days=60').then(r=>r.json())
+    ]).then(res=>{
+      updateCell('sjv-m1',  res[0].activeUsers);
+      updateCell('sjv-m7',  res[1].activeUsers);
+      updateCell('sjv-m30', res[2].activeUsers);
+      updateCell('sjv-m60', res[3].activeUsers);
+      updateTimestamp();
+    });
+  }
+
+  function realtime() {
+    fetch(GAS+'?type=realtime')
+      .then(r=>r.json())
+      .then(d=>{ updateCell('sjv-mini-rt', d.activeUsers); });
+  }
+
+  loadMini();
+  realtime();
+  setInterval(realtime, 30000);
+
+})();
+</script>
